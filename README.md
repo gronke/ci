@@ -66,7 +66,7 @@ jobs:
 | `rust-version` | `latest` | `rust:<tag>` base for the image, or `msrv`. |
 | `targets` | `""` | Space-separated rustup targets to cross-check. |
 | `features` | `""` | Feature flag for the sealed lint-and-test leg. |
-| `msrv` | `true` | Also verify the crate on its declared MSRV; skipped when `rust-version` is `msrv`. |
+| `msrv` | `true` | Also verify the crate on its declared MSRV, against the committed `Cargo.lock` when there is one; skipped when `rust-version` is `msrv`. |
 | `working-directory` | `.` | Crate directory. |
 | `runs-on` | `ubuntu-latest` | The runner of the sealed job; a caller on self-hosted runners passes its label. |
 

@@ -21,6 +21,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 
 ### Changed
 
+- `ci.yml`: the msrv leg checks the committed `Cargo.lock` like the main gate, and resolves afresh only for a crate without one.
 - `sccache`: `auto` activates on a backend configured by the rules of the pinned release, a configuration file's cache and a multi-level chain included; a tuning variable alone (`SCCACHE_CACHE_SIZE`, a `SCCACHE_CONF` without a cache) no longer does.
 - `cargo-install`: host mode puts `<cargo-cache>/bin` on `PATH` for later steps, and `cargo-cache` may be absolute there too.
 - `sccache` downloads its release through `_lib/install-release.sh`, the installer `cargo-install` uses for prebuilt releases.
