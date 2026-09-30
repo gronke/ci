@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 
 ### Added
 
+- `ci.yml`: `runs-on` names the runner of the sealed job (default `ubuntu-latest`), so a caller on self-hosted runners passes its label, for example `${{ vars.RUNNER_STANDARD || 'ubuntu-latest' }}`.
 - `rust-cache`: `cache-registry` (`"true"`, `"false"`, `"auto"`); `auto` skips the registry archive, restore and save alike, when `RUST_CI_CRATES_MIRROR` is set in the job environment, and the `registry-cached` output says what happened.
 - `sccache`: `namespace` puts a job's objects below the configured backend's key prefix (S3, GCS, Azure, WebDAV, Redis, Memcached, OSS, COS, or a subdirectory of `SCCACHE_DIR`), so tiers or platforms share one backend without sharing objects; it separates objects, not writers.
 - `route-git-token`: `remaps`, lines of `from=to` that fetch a dependency pinned at a URL outside the routed namespace from a repository on the host, with the token presented.

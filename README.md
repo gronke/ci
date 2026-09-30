@@ -68,6 +68,7 @@ jobs:
 | `features` | `""` | Feature flag for the sealed lint-and-test leg. |
 | `msrv` | `true` | Also verify the crate on its declared MSRV; skipped when `rust-version` is `msrv`. |
 | `working-directory` | `.` | Crate directory. |
+| `runs-on` | `ubuntu-latest` | The runner of the sealed job; a caller on self-hosted runners passes its label. |
 
 ## Actions
 

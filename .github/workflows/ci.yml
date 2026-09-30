@@ -38,6 +38,12 @@ on:
         description: Crate directory.
         type: string
         default: "."
+      runs-on:
+        description: >-
+          The runner label of the sealed job; a caller on self-hosted runners
+          passes its own, for example from an organization variable.
+        type: string
+        default: ubuntu-latest
 
 permissions:
   contents: read
@@ -45,7 +51,7 @@ permissions:
 jobs:
   sealed:
     name: sealed lint, test, cross-check, msrv
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v7.0.1
 
