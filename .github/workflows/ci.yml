@@ -98,7 +98,10 @@ jobs:
 
       # MSRV: cargo-checks inside the plain rust:<declared rust-version> image. With
       # rust-version: msrv the image above already is the MSRV, so the leg is redundant.
+      # The leg checks the committed Cargo.lock, as the main gate does; a crate
+      # without one resolves afresh.
       - uses: gronke/rust-ci/.github/actions/msrv@v1
         if: ${{ inputs.msrv && inputs.rust-version != 'msrv' }}
         with:
           working-directory: ${{ inputs.working-directory }}
+          locked: ${{ hashFiles(format('{0}/Cargo.lock', inputs.working-directory)) != '' }}
