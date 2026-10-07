@@ -1,0 +1,86 @@
+name: Cargo fetch (Docker)
+description: >-
+  Populate the cargo registry and git cache inside the pinned container, as the one networked step, so the following actions can run sealed (--network none, --offline).
+  Requires a committed Cargo.lock (runs --locked).
+
+inputs:
+  image:
+    description: CI image (Rust toolchain + clippy/rustfmt + jq).
+    required: false
+    default: rust-ci:latest
+  working-directory:
+    description: Crate/workspace directory (mounted read-only).
+    required: false
+    default: "."
+  cargo-cache:
+    description: Host dir for CARGO_HOME (registry/git cache; read-write, cacheable).
+    required: false
+    default: .cargo-cache
+  env-include:
+    description: Regex (POSIX ERE) of runner variable names to forward, anchored full-name; see docs/sealed-builds.md.
+    required: false
+    default: "CARGO_.*"
+  env-exclude:
+    description: Regex (POSIX ERE) of names to drop from the included set (exclusion wins); see docs/sealed-builds.md.
+    required: false
+    default: ""
+  env:
+    description: Literal KEY=VALUE lines forwarded verbatim; a bare NAME line forwards that variable from the runner environment; see docs/sealed-builds.md.
+    required: false
+    default: ""
+  git-token:
+    description: >-
+      Token for cloning private git dependencies inside the container: the fetch is routed through it as GIT_CONFIG_* environment entries (an url.insteadOf rewrite for git-host, presented as git-username) and cargo fetches through the git CLI.
+      Pass a secret carrying contents:read on the dependency repositories; leave empty for public dependencies.
+    required: false
+    default: ""
+  git-host:
+    description: Git host the token routes, optionally with a port; see route-git-token.
+    required: false
+    default: "github.com"
+  git-username:
+    description: Userinfo name the token is presented under (x-access-token for GitHub, oauth2 for GitLab).
+    required: false
+    default: "x-access-token"
+  git-path:
+    description: Restrict the rewrite to a namespace under the host; empty routes every fetch on the host.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: cargo fetch (networked)
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        IMAGE: ${{ inputs.image }}
+        CARGO_CACHE: ${{ inputs.cargo-cache }}
+        ENV_INCLUDE: ${{ inputs.env-include }}
+        ENV_EXCLUDE: ${{ inputs.env-exclude }}
+        INPUT_ENV: ${{ inputs.env }}
+        GIT_TOKEN: ${{ inputs.git-token }}
+        GIT_HOST: ${{ inputs.git-host }}
+        GIT_USERNAME: ${{ inputs.git-username }}
+        GIT_PATH: ${{ inputs.git-path }}
+      run: |
+        set -euo pipefail
+        # shellcheck source=/dev/null
+        source "$GITHUB_ACTION_PATH/../../_lib/seal.sh"
+        # shellcheck source=/dev/null
+        source "$GITHUB_ACTION_PATH/../../_lib/retry-transient.sh"
+        # shellcheck source=/dev/null
+        source "$GITHUB_ACTION_PATH/../../_lib/git-route.sh"
+        # The one networked step: OFFLINE unset, so no --network=none; no target mount,
+        # because fetch only populates the cache. A private-git token is validated,
+        # masked (the first line git_route_lines prints) and handed to the container
+        # as GIT_CONFIG_* env-file lines that its git honours; nothing is written
+        # to a gitconfig file.
+        if [ -n "$GIT_TOKEN" ]; then
+          lines="$(git_route_lines "$GIT_TOKEN" "$GIT_HOST" "$GIT_USERNAME" "$GIT_PATH" 0)"
+          printf '%s\n' "$lines" | sed -n '1p'
+          EXTRA_ENV="$(printf '%s\n' "$lines" | sed -n '2,$p')"
+          export EXTRA_ENV
+        fi
+        # cargo fetch is incremental, so a retry after a crates.io blip resumes off the cache.
+        retry_transient seal_run cargo fetch --locked

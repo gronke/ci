@@ -1,6 +1,6 @@
 # Private git dependencies
 
-`cargo-fetch` can clone `Cargo.toml` git dependencies from **private** repositories when you pass a credential through its `git-token` input; see the [`cargo-fetch` README](../.github/actions/cargo-fetch/README.md) for how the token reaches the container's git.
+`cargo-fetch` can clone `Cargo.toml` git dependencies from **private** repositories when you pass a credential through its `git-token` input; see the [`cargo-fetch` README](../.github/actions/rust/cargo-fetch/README.md) for how the token reaches the container's git.
 This page covers how to obtain that credential.
 
 The automatic `GITHUB_TOKEN` cannot serve here: its permissions are limited to the repository that contains the workflow, so a dependency in any *other* repository, even a private one in the same organisation, is out of reach.
@@ -53,7 +53,7 @@ For a host other than GitHub, add `git-host` (and `git-username`, `oauth2` on Gi
     permission-contents: read       # narrow the minted token to read-only contents
 
 - name: Cargo fetch
-  uses: gronke/rust-ci/.github/actions/cargo-fetch@v1
+  uses: gronke/ci/.github/actions/rust/cargo-fetch@v3
   with:
     git-token: ${{ steps.deps-token.outputs.token }}
 ```
@@ -72,7 +72,7 @@ A job that runs plain `cargo build` or `git clone` on the runner (no `cargo-fetc
 
 ```yaml
 - name: Route private git fetches through an App token
-  uses: gronke/rust-ci/.github/actions/route-git-token@v1
+  uses: gronke/ci/.github/actions/route-git-token@v3
   with:
     app-client-id: ${{ vars.DEPS_APP_CLIENT_ID }}
     app-private-key: ${{ secrets.DEPS_APP_PRIVATE_KEY }}
@@ -95,7 +95,7 @@ Create a fine-grained PAT with **Contents: Read** on each private dependency rep
 
 ```yaml
 - name: Cargo fetch
-  uses: gronke/rust-ci/.github/actions/cargo-fetch@v1
+  uses: gronke/ci/.github/actions/rust/cargo-fetch@v3
   with:
     git-token: ${{ secrets.PRIVATE_DEP_TOKEN }}
 ```

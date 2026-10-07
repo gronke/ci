@@ -6,7 +6,7 @@ Pair it with [`timing-report`](../timing-report/README.md) as an `if: always()` 
 ## Usage
 
 ```yaml
-- uses: gronke/rust-ci/.github/actions/timing-start@v1
+- uses: gronke/ci/.github/actions/timing-start@v3
   # with:
   #   sample-interval: "5"      # seconds; "0" records durations only
 ```

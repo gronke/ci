@@ -1,12 +1,12 @@
 # route-git-token
 
 Route git fetches on the runner through a short-lived token: `url.insteadOf` rewrites that authenticate https fetches, exported as `GIT_CONFIG_*` environment entries via `GITHUB_ENV`, plus `CARGO_NET_GIT_FETCH_WITH_CLI=true` so cargo fetches through the git CLI, which honors the rewrites (cargo's libgit2 path does not).
-Use it for jobs that run plain `cargo build` or `git clone` on the runner; [`cargo-fetch`](../cargo-fetch/README.md)'s `git-token` input is the sealed equivalent (see [Private git dependencies](../../../docs/private-git-dependencies.md)).
+Use it for jobs that run plain `cargo build` or `git clone` on the runner; [`cargo-fetch`](../rust/cargo-fetch/README.md)'s `git-token` input is the sealed equivalent (see [Private git dependencies](../../../docs/private-git-dependencies.md)).
 
 ## Usage
 
 ```yaml
-- uses: gronke/rust-ci/.github/actions/route-git-token@v1
+- uses: gronke/ci/.github/actions/route-git-token@v3
   with:
     app-client-id: ${{ vars.DEPS_APP_CLIENT_ID }}
     app-private-key: ${{ secrets.DEPS_APP_PRIVATE_KEY }}

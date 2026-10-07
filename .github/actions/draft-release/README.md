@@ -7,7 +7,7 @@ Run it on every push of the release branch, followed by [`release-guidance`](../
 
 ```yaml
 - uses: actions/checkout@v7
-- uses: gronke/rust-ci/.github/actions/draft-release@v1
+- uses: gronke/ci/.github/actions/draft-release@v3
   id: draft
   with:
     version: ${{ needs.gate.outputs.version }}

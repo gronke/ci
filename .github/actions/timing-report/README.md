@@ -10,10 +10,10 @@ permissions:
   contents: read
   actions: read          # the per-step timings come from the Actions API
 steps:
-  - uses: gronke/rust-ci/.github/actions/timing-start@v1
+  - uses: gronke/ci/.github/actions/timing-start@v3
   - run: cargo build --release
   - run: cargo test --release
-  - uses: gronke/rust-ci/.github/actions/timing-report@v1
+  - uses: gronke/ci/.github/actions/timing-report@v3
     if: always()
     id: timing
   - run: echo "slowest stage ${{ steps.timing.outputs.slowest-stage }}"

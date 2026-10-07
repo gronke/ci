@@ -6,20 +6,20 @@ The per-action READMEs carry the inputs; this page shows how the pieces line up.
 ## Pull requests: QA and test
 
 Native runners: `install-toolchain`, `rust-cache`, `lint-and-test`, `changelog` in `check` mode, `rust-cache-save` with `save: "false"` so pull requests only read what the default branch maintains.
-Sealed runners: the reusable `ci.yml` workflow, which builds the toolchain image, warms the cache with `cargo-fetch` and runs `lint-and-test-docker` under `--network=none`, plus `msrv` for the support floor.
+Sealed runners: the reusable `rust.yml` workflow, which builds the toolchain image, warms the cache with `cargo-fetch` and runs `lint-and-test-docker` under `--network=none`, plus `msrv` for the support floor.
 
 ```yaml
 on: [pull_request]
 jobs:
   qa:
-    uses: gronke/rust-ci/.github/workflows/ci.yml@v1
+    uses: gronke/ci/.github/workflows/rust.yml@v3
   changelog:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: gronke/rust-ci/.github/actions/changelog@v1
+      - uses: gronke/ci/.github/actions/changelog@v3
         with:
           mode: check
 ```
@@ -45,11 +45,11 @@ A human signs the marker's commit as the final tag and pushes it by name; `requi
 permissions: { id-token: write, contents: write }
 steps:
   - uses: actions/checkout@v7
-  - uses: gronke/rust-ci/.github/actions/check-release-readiness@v1
-  - uses: gronke/rust-ci/.github/actions/require-signed-tag@v1
+  - uses: gronke/ci/.github/actions/check-release-readiness@v3
+  - uses: gronke/ci/.github/actions/require-signed-tag@v3
   - id: auth
     uses: rust-lang/crates-io-auth-action@v1
-  - uses: gronke/rust-ci/.github/actions/cargo-publish@v1
+  - uses: gronke/ci/.github/actions/rust/cargo-publish@v3
     with:
       publish: "true"
       registry-token: ${{ steps.auth.outputs.token }}

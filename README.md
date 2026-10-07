@@ -1,7 +1,7 @@
-# rust-ci
+# ci
 
 Composite GitHub Actions for Rust projects: toolchain and QA gates, sealed Docker builds, cargo and sccache caching, a Keep a Changelog release flow, and crates.io publishing.
-Each action lives under `.github/actions/<name>` and is consumed with `uses: gronke/rust-ci/.github/actions/<name>@v1`.
+The Rust actions live under `.github/actions/rust/<name>`, the release flow and the other language-neutral actions at `.github/actions/<name>`; consume them as `uses: gronke/ci/.github/actions/rust/<name>@v3` and `.../<name>@v3`.
 The sealed actions run dependency code with no network, so a build script or proc-macro cannot reach out during a build.
 Every action has its own README with inputs, outputs and an example; this page is the map.
 
@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: gronke/rust-ci/.github/actions/install-toolchain@v1
+      - uses: gronke/ci/.github/actions/rust/install-toolchain@v3
         with:
           components: rustfmt clippy
-      - uses: gronke/rust-ci/.github/actions/rust-cache@v1
+      - uses: gronke/ci/.github/actions/rust/rust-cache@v3
         with:
           cache-target: "true"
-      - uses: gronke/rust-ci/.github/actions/lint-and-test@v1
-      - uses: gronke/rust-ci/.github/actions/rust-cache-save@v1
+      - uses: gronke/ci/.github/actions/rust/lint-and-test@v3
+      - uses: gronke/ci/.github/actions/rust/rust-cache-save@v3
         if: always()
         with:
           save: ${{ github.ref == 'refs/heads/main' }}
@@ -36,16 +36,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: gronke/rust-ci/.github/actions/install-toolchain@v1   # before sccache: the toolchain keys the archive
-      - uses: gronke/rust-ci/.github/actions/rust-cache@v1          # the registry: downloads, not compiles
+      - uses: gronke/ci/.github/actions/rust/install-toolchain@v3   # before sccache: the toolchain keys the archive
+      - uses: gronke/ci/.github/actions/rust/rust-cache@v3          # the registry: downloads, not compiles
         with:
           save: ${{ github.ref == 'refs/heads/main' }}
-      - uses: gronke/rust-ci/.github/actions/sccache@v1
+      - uses: gronke/ci/.github/actions/rust/sccache@v3
         with:
           archive: test
           write: ${{ github.ref == 'refs/heads/main' }}
       - run: cargo test --locked                                   # the lockfile hash names what the archive holds
-      - uses: gronke/rust-ci/.github/actions/sccache-stats@v1
+      - uses: gronke/ci/.github/actions/rust/sccache-stats@v3
         if: always()
 ```
 
@@ -56,7 +56,7 @@ The sealed pipeline as one reusable-workflow call: build the toolchain image, wa
 ```yaml
 jobs:
   ci:
-    uses: gronke/rust-ci/.github/workflows/ci.yml@v1
+    uses: gronke/ci/.github/workflows/rust.yml@v3
     with:
       targets: wasm32-unknown-unknown   # optional: sealed cross-checks
 ```
@@ -78,33 +78,33 @@ Each name links to the action's README.
 
 | Action | Does |
 | --- | --- |
-| [`install-toolchain`](.github/actions/install-toolchain/README.md) | Install a rustup toolchain with components and targets and put cargo on `PATH`. |
-| [`lint-and-test`](.github/actions/lint-and-test/README.md) | Run `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` for one feature set. |
-| [`msrv`](.github/actions/msrv/README.md) | Compile the crate on its declared `rust-version` inside the plain `rust:<version>` image, sealed. |
-| [`cargo-out-dir`](.github/actions/cargo-out-dir/README.md) | Build a package and expose its build script's `OUT_DIR`. |
+| [`install-toolchain`](.github/actions/rust/install-toolchain/README.md) | Install a rustup toolchain with components and targets and put cargo on `PATH`. |
+| [`lint-and-test`](.github/actions/rust/lint-and-test/README.md) | Run `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` for one feature set. |
+| [`msrv`](.github/actions/rust/msrv/README.md) | Compile the crate on its declared `rust-version` inside the plain `rust:<version>` image, sealed. |
+| [`cargo-out-dir`](.github/actions/rust/cargo-out-dir/README.md) | Build a package and expose its build script's `OUT_DIR`. |
 
 ### Sealed Docker builds
 
 | Action | Does |
 | --- | --- |
-| [`build-image`](.github/actions/build-image/README.md) | Build the `rust:<version>` toolchain image locally, with no registry. |
-| [`cargo-fetch`](.github/actions/cargo-fetch/README.md) | Warm the cargo cache, the one networked step. |
-| [`cargo-docker`](.github/actions/cargo-docker/README.md) | Run one cargo command sealed: non-root, no capabilities, read-only source, no network. |
-| [`lint-and-test-docker`](.github/actions/lint-and-test-docker/README.md) | The lint-and-test gate, sealed. |
-| [`cargo-install`](.github/actions/cargo-install/README.md) | Install a cargo tool into the shared cargo cache, sealed, or from a pinned prebuilt release; an exact version already present is skipped. |
-| [`cargo-use`](.github/actions/cargo-use/README.md) | Run an installed tool from that cache, sealed. |
-| [`publish-dry-run`](.github/actions/publish-dry-run/README.md) | Publish checks without a build, then the verify-build sealed. |
+| [`build-image`](.github/actions/rust/build-image/README.md) | Build the `rust:<version>` toolchain image locally, with no registry. |
+| [`cargo-fetch`](.github/actions/rust/cargo-fetch/README.md) | Warm the cargo cache, the one networked step. |
+| [`cargo-docker`](.github/actions/rust/cargo-docker/README.md) | Run one cargo command sealed: non-root, no capabilities, read-only source, no network. |
+| [`lint-and-test-docker`](.github/actions/rust/lint-and-test-docker/README.md) | The lint-and-test gate, sealed. |
+| [`cargo-install`](.github/actions/rust/cargo-install/README.md) | Install a cargo tool into the shared cargo cache, sealed, or from a pinned prebuilt release; an exact version already present is skipped. |
+| [`cargo-use`](.github/actions/rust/cargo-use/README.md) | Run an installed tool from that cache, sealed. |
+| [`publish-dry-run`](.github/actions/rust/publish-dry-run/README.md) | Publish checks without a build, then the verify-build sealed. |
 | [`route-git-token`](.github/actions/route-git-token/README.md) | Route git fetches on the runner through a short-lived token, minted from a GitHub App on request, with remaps for dependencies pinned outside the routed namespace. |
 
 ### Caching
 
 | Action | Does |
 | --- | --- |
-| [`rust-cache`](.github/actions/rust-cache/README.md) | Restore cargo's registry cache and, optionally, `target/`. |
-| [`rust-cache-save`](.github/actions/rust-cache-save/README.md) | Prune `target/` to dependency artifacts and save it, as the job's last step. |
-| [`sccache`](.github/actions/sccache/README.md) | Install a pinned sccache as `RUSTC_WRAPPER`; the backend comes from `SCCACHE_*` in the job environment, or from a GitHub Actions cache archive without one. |
-| [`sccache-stats`](.github/actions/sccache-stats/README.md) | Record sccache's hits and misses in the step summary and for the timing report. |
-| [`crates-mirror`](.github/actions/crates-mirror/README.md) | Point cargo's crates-io source at a mirror URL. |
+| [`rust-cache`](.github/actions/rust/rust-cache/README.md) | Restore cargo's registry cache and, optionally, `target/`. |
+| [`rust-cache-save`](.github/actions/rust/rust-cache-save/README.md) | Prune `target/` to dependency artifacts and save it, as the job's last step. |
+| [`sccache`](.github/actions/rust/sccache/README.md) | Install a pinned sccache as `RUSTC_WRAPPER`; the backend comes from `SCCACHE_*` in the job environment, or from a GitHub Actions cache archive without one. |
+| [`sccache-stats`](.github/actions/rust/sccache-stats/README.md) | Record sccache's hits and misses in the step summary and for the timing report. |
+| [`crates-mirror`](.github/actions/rust/crates-mirror/README.md) | Point cargo's crates-io source at a mirror URL. |
 
 ### Release
 
@@ -122,7 +122,7 @@ Each name links to the action's README.
 
 | Action | Does |
 | --- | --- |
-| [`cargo-publish`](.github/actions/cargo-publish/README.md) | Publish the crate to crates.io behind [`require-signed-tag`](.github/actions/require-signed-tag/README.md), or rehearse it. |
+| [`cargo-publish`](.github/actions/rust/cargo-publish/README.md) | Publish the crate to crates.io behind [`require-signed-tag`](.github/actions/require-signed-tag/README.md), or rehearse it. |
 
 ### Observability
 
@@ -146,7 +146,8 @@ An sccache backend, a crates mirror and a persistent target directory reach the 
 
 ## Versioning
 
-Pin `@v1`, the moving major, or an exact release tag.
+Pin `@v3`, the moving major, or an exact release tag.
+Through v2 the repository was `gronke/rust-ci`, with every action at `.github/actions/<name>`; that repository stays frozen at v2.0.0.
 `CHANGELOG.md` follows Keep a Changelog, and releases are cut with this repository's own actions.
 
 ## Self-test

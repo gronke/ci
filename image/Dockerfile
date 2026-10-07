@@ -1,4 +1,4 @@
-# Rust toolchain image for the rust-ci composite actions: adds clippy, rustfmt, jq.
+# Rust toolchain image for the Rust actions of gronke/ci: adds clippy, rustfmt, jq.
 ARG RUST_VERSION=latest
 FROM rust:${RUST_VERSION}
 

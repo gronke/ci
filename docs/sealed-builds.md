@@ -40,7 +40,7 @@ env:
 jobs:
   ci:
     steps:
-      - uses: gronke/rust-ci/.github/actions/lint-and-test-docker@v1
+      - uses: gronke/ci/.github/actions/rust/lint-and-test-docker@v3
         with:
           env-include: "(CARGO_|RUST).*"   # forward cargo and rust vars
           env: |                            # literal extras, always forwarded
