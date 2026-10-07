@@ -1,0 +1,7 @@
+{
+  "name": "pack-me",
+  "version": "0.1.0",
+  "description": "The package the self-test packs through the writable working directory.",
+  "license": "MIT",
+  "main": "index.js"
+}

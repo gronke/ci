@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Stefan Grönke <stefan@gronke.net>
+# SPDX-License-Identifier: MIT
+# npx from the sealed container: NODE_IMAGE by digest, no network, the calling user, no
+# capabilities, a read-only root, /tmp a tmpfs. The working directory is /data, writable, so
+# `npm pack` and offline installs can write. SEALED_NPM, when set, is the npm that runs.
+set -euo pipefail
+: "${NODE_IMAGE:?NODE_IMAGE is not set (node:<version>-slim@sha256:...)}"
+mounts=(-v "$PWD:/data")
+envs=(-e HOME=/tmp -e npm_config_cache=/tmp/npm -e npm_config_update_notifier=false)
+if [ -n "${SEALED_NPM:-}" ]; then
+  mounts+=(-v "$SEALED_NPM:/opt/npm:ro")
+  cmd=(--entrypoint node "$NODE_IMAGE" /opt/npm/bin/npx-cli.js)
+else
+  cmd=(--entrypoint npx "$NODE_IMAGE")
+fi
+exec docker run --rm -i --network none \
+  --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+  --read-only --tmpfs /tmp:exec \
+  "${envs[@]}" "${mounts[@]}" -w /data \
+  "${cmd[@]}" "$@"

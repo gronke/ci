@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# SPDX-FileCopyrightText: 2026 Stefan Grönke <stefan@gronke.net>
+# SPDX-License-Identifier: MIT
+# node from the sealed container: NODE_IMAGE by digest, no network, the calling user, no
+# capabilities, a read-only root, /tmp a tmpfs. The working directory is /data, read-only.
+# NODE_PATH passes through, and SEALED_NODE_MODULES mounts read-only at its own path.
+set -euo pipefail
+: "${NODE_IMAGE:?NODE_IMAGE is not set (node:<version>-slim@sha256:...)}"
+mounts=(-v "$PWD:/data:ro")
+envs=(-e HOME=/tmp)
+if [ -n "${SEALED_NODE_MODULES:-}" ]; then mounts+=(-v "$SEALED_NODE_MODULES:$SEALED_NODE_MODULES:ro"); fi
+if [ -n "${NODE_PATH:-}" ]; then envs+=(-e NODE_PATH); fi
+exec docker run --rm -i --network none \
+  --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+  --read-only --tmpfs /tmp:exec \
+  "${envs[@]}" "${mounts[@]}" -w /data \
+  --entrypoint node "$NODE_IMAGE" "$@"

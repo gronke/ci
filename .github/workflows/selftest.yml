@@ -2724,3 +2724,66 @@ jobs:
             echo "::error::CPU columns rendered with no samples behind them"; exit 1
           fi
           echo "✓ Cache section rendered, durations only"
+
+  selftest-node:
+    name: exercise the sealed-node action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: ./.github/actions/node/sealed-node
+        id: sealed
+        with:
+          image: node:24-slim@sha256:3638d9a6fe4030bd716be989438248074489337ba3275657f93595428be4fc03
+          npm-version: 12.1.0
+          npm-integrity: sha512-Fyhu62pNx70YCs/5+dEmJQTFVmSKwvo5CA0qvBkGDRpob42MJ6G2RQ2tdxeKM4nYnIZDqkYAxEgqtoejn9QGtQ==
+          lockfile-dir: fixtures/node/minimatch
+
+      # Every `node`, `npm` and `npx` from here on is the shim the action put first on PATH: a
+      # `docker run` of the pinned image with the network off. The first line proves it, and the
+      # seal assertions below could not pass on the runner itself. The runner needs Docker only.
+      - name: the shims are on PATH and the pins hold
+        run: |
+          set -euo pipefail
+          test "$(command -v node)" = "$GITHUB_WORKSPACE/.github/actions/node/sealed-node/bin/node"
+          node --version | grep -q '^v24\.'
+          test "$(npm --version)" = "12.1.0"
+          test "$(npx --version)" = "12.1.0"
+          test "$(node -p "require('minimatch/package.json').version")" = "10.2.5"
+          test -d "${{ steps.sealed.outputs.node-modules }}/minimatch"
+          test -f "${{ steps.sealed.outputs.npm-dir }}/bin/npm-cli.js"
+
+      # The step shell runs with -e, so the expected failure is captured as a status.
+      - name: no network inside the container
+        run: |
+          set -euo pipefail
+          rc=0
+          node -e "require('net').connect(80, '1.1.1.1').on('error', () => process.exit(3)).on('connect', () => process.exit(0))" || rc=$?
+          test "$rc" -eq 3 || { echo "::error::the connection attempt ended with $rc, not the refusal"; exit 1; }
+
+      - name: the calling user, a read-only root, a writable /tmp
+        run: |
+          set -euo pipefail
+          test "$(node -p 'process.getuid()')" = "$(id -u)"
+          if node -e "require('fs').writeFileSync('/etc/node-ci', '')" 2>/dev/null; then
+            echo "::error::the container root is writable"; exit 1
+          fi
+          node -e "require('fs').writeFileSync('/tmp/node-ci', 'ok')"
+
+      - name: npm pack writes through the working directory
+        working-directory: fixtures/node/pack-me
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json | grep -q '"name": "pack-me"'
+          npm pack >/dev/null
+          test -f pack-me-0.1.0.tgz
+
+      # Nothing is restored from a cache here, but the stamp must keep the tree on a second run.
+      - name: a second run keeps the installed tree
+        run: |
+          set -euo pipefail
+          before="$(stat -c %Y "$SEALED_NODE_MODULES/minimatch/package.json")"
+          INPUT_IMAGE="$NODE_IMAGE" INPUT_LOCKFILE_DIR=fixtures/node/minimatch ACTION_PATH="$GITHUB_WORKSPACE/.github/actions/node/sealed-node" \
+            GITHUB_ENV=/dev/null GITHUB_PATH=/dev/null GITHUB_OUTPUT=/dev/null \
+            .github/actions/node/sealed-node/sealed-node.sh
+          test "$(stat -c %Y "$SEALED_NODE_MODULES/minimatch/package.json")" = "$before"

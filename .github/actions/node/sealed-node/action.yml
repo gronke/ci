@@ -1,0 +1,36 @@
+# SPDX-FileCopyrightText: 2026 Stefan Grönke <stefan@gronke.net>
+# SPDX-License-Identifier: MIT
+name: sealed-node
+description: node, npm and npx from a digest-pinned container without network, with an optional pinned npm and an optional lockfile tree.
+inputs:
+  image:
+    description: The node image by digest, such as node:24-slim@sha256:...
+    required: true
+  npm-version:
+    description: An npm version to run in place of the image's, fetched as its registry tarball.
+    default: ""
+  npm-integrity:
+    description: The sha512-... integrity of that tarball; required with npm-version.
+    default: ""
+  lockfile-dir:
+    description: A directory with package.json and package-lock.json, installed once with the network on; the tree becomes NODE_PATH.
+    default: ""
+outputs:
+  node-modules:
+    description: The installed tree's node_modules; empty without lockfile-dir.
+    value: ${{ steps.setup.outputs.node-modules }}
+  npm-dir:
+    description: The extracted npm; empty without npm-version.
+    value: ${{ steps.setup.outputs.npm-dir }}
+runs:
+  using: composite
+  steps:
+    - id: setup
+      shell: bash
+      env:
+        INPUT_IMAGE: ${{ inputs.image }}
+        INPUT_NPM_VERSION: ${{ inputs.npm-version }}
+        INPUT_NPM_INTEGRITY: ${{ inputs.npm-integrity }}
+        INPUT_LOCKFILE_DIR: ${{ inputs.lockfile-dir }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: "$ACTION_PATH/sealed-node.sh"
