@@ -1,7 +1,7 @@
 # ci
 
-Composite GitHub Actions for Rust projects: toolchain and QA gates, sealed Docker builds, cargo and sccache caching, a Keep a Changelog release flow, and crates.io publishing.
-The Rust actions live under `.github/actions/rust/<name>`, the release flow and the other language-neutral actions at `.github/actions/<name>`; consume them as `uses: gronke/ci/.github/actions/rust/<name>@v3` and `.../<name>@v3`.
+Composite GitHub Actions for Rust and Node projects: toolchain and QA gates, sealed Docker builds, cargo and sccache caching, a sealed node for tests against npm packages, a Keep a Changelog release flow, and crates.io publishing.
+The Rust actions live under `.github/actions/rust/<name>`, the Node actions under `.github/actions/node/<name>`, the release flow and the other language-neutral actions at `.github/actions/<name>`; consume them as `uses: gronke/ci/.github/actions/rust/<name>@v3`, `.../node/<name>@v3` and `.../<name>@v3`.
 The sealed actions run dependency code with no network, so a build script or proc-macro cannot reach out during a build.
 Every action has its own README with inputs, outputs and an example; this page is the map.
 
@@ -96,6 +96,12 @@ Each name links to the action's README.
 | [`publish-dry-run`](.github/actions/rust/publish-dry-run/README.md) | Publish checks without a build, then the verify-build sealed. |
 | [`route-git-token`](.github/actions/route-git-token/README.md) | Route git fetches on the runner through a short-lived token, minted from a GitHub App on request, with remaps for dependencies pinned outside the routed namespace. |
 
+### Node
+
+| Action | Does |
+| --- | --- |
+| [`node/sealed-node`](.github/actions/node/sealed-node/README.md) | `node`, `npm` and `npx` from a digest-pinned container without network, with an optional pinned npm and an optional lockfile tree; [docs/sealed-node.md](docs/sealed-node.md) states the seal. |
+
 ### Caching
 
 | Action | Does |
@@ -152,7 +158,7 @@ Through v2 the repository was `gronke/rust-ci`, with every action at `.github/ac
 
 ## Self-test
 
-[`.github/workflows/selftest.yml`](.github/workflows/selftest.yml) exercises every action against [`fixtures/sample-crate`](fixtures/sample-crate/) on each pull request.
+[`.github/workflows/selftest.yml`](.github/workflows/selftest.yml) exercises every action against [`fixtures/sample-crate`](fixtures/sample-crate/) and [`fixtures/node`](fixtures/node/) on each pull request.
 `scripts/lint.sh` runs shellcheck, yamllint, actionlint (through Docker) and the em-dash check locally.
 
 ## Licence

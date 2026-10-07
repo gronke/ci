@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 
 ### Added
 
+- `node/sealed-node`: `node`, `npm` and `npx` from a digest-pinned container without network, with an optional pinned npm (version and sha512) and an optional lockfile tree installed once with the network on; `NODE_IMAGE`, `SEALED_NPM`, `SEALED_NODE_MODULES` and `NODE_PATH` are exported, the shims go on `PATH`, and a restored cache of `$RUNNER_TEMP/node-ci` is reused behind a hash check and a stamp.
 - `ci.yml`: `runs-on` names the runner of the sealed job (default `ubuntu-latest`), so a caller on self-hosted runners passes its label, for example `${{ vars.RUNNER_STANDARD || 'ubuntu-latest' }}`.
 - `rust-cache`: `cache-registry` (`"true"`, `"false"`, `"auto"`); `auto` skips the registry archive, restore and save alike, when `RUST_CI_CRATES_MIRROR` is set in the job environment, and the `registry-cached` output says what happened.
 - `sccache`: `namespace` puts a job's objects below the configured backend's key prefix (S3, GCS, Azure, WebDAV, Redis, Memcached, OSS, COS, or a subdirectory of `SCCACHE_DIR`), so tiers or platforms share one backend without sharing objects; it separates objects, not writers.

@@ -1,0 +1,8 @@
+{
+  "name": "node-ci-selftest",
+  "private": true,
+  "description": "The lockfile tree the self-test installs: minimatch 10.2.5, read through NODE_PATH in the sealed container.",
+  "dependencies": {
+    "minimatch": "10.2.5"
+  }
+}
