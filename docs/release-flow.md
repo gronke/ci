@@ -1,7 +1,7 @@
 # The release flow
 
 How a repository goes from `[Unreleased]` changelog entries to a published GitHub release, and for a crate to a crates.io upload, composed from the eight release actions in this repository:
-[`changelog`](../.github/actions/changelog/README.md), [`cut-release`](../.github/actions/cut-release/README.md), [`check-release-readiness`](../.github/actions/check-release-readiness/README.md), [`draft-release`](../.github/actions/draft-release/README.md), [`release-guidance`](../.github/actions/release-guidance/README.md), [`require-signed-tag`](../.github/actions/require-signed-tag/README.md), [`publish-draft-release`](../.github/actions/publish-draft-release/README.md), and [`cargo-publish`](../.github/actions/cargo-publish/README.md).
+[`changelog`](../.github/actions/changelog/README.md), [`cut-release`](../.github/actions/cut-release/README.md), [`check-release-readiness`](../.github/actions/check-release-readiness/README.md), [`draft-release`](../.github/actions/draft-release/README.md), [`release-guidance`](../.github/actions/release-guidance/README.md), [`require-signed-tag`](../.github/actions/require-signed-tag/README.md), [`publish-draft-release`](../.github/actions/publish-draft-release/README.md), and [`cargo-publish`](../.github/actions/rust/cargo-publish/README.md).
 Every gate is a step a repository can replace or drop.
 
 The flow is branch-based: every push of a `release/vX.Y.Z` branch rebuilds a draft pre-release, and one human-signed annotated `vX.Y.Z` tag publishes that draft.
@@ -64,7 +64,7 @@ On a tag run `require-signed-tag` refuses a lightweight or unverified tag, and t
 
 **Publish** (`publish-draft-release`): the signed `vX.Y.Z` tag arrives, and the tag run seals it against the newest marker by tree, flips the draft live (a stable version sheds the pre-release flag), and with `moving-major` advances `v<MAJOR>` to the highest stable release in its line.
 
-**Registry** (`cargo-publish`): on the same tag run, behind `require-signed-tag`, the crate is uploaded with the Trusted Publishing token from `rust-lang/crates-io-auth-action`; [`cargo-publish`'s README](../.github/actions/cargo-publish/README.md) has the three-step snippet.
+**Registry** (`cargo-publish`): on the same tag run, behind `require-signed-tag`, the crate is uploaded with the Trusted Publishing token from `rust-lang/crates-io-auth-action`; [`cargo-publish`'s README](../.github/actions/rust/cargo-publish/README.md) has the three-step snippet.
 
 **Merge-back**: the pull request the cut opened lands on the default branch; on a repository without a Cargo.toml, `check` warns until the newest released section carries its tag.
 

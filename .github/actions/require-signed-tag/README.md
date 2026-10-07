@@ -1,14 +1,14 @@
 # require-signed-tag
 
 The signature gate of the release pipeline: the ref must be an annotated tag object whose signature GitHub verifies.
-Run it in the tag run's gate job, after [`check-release-readiness`](../check-release-readiness/README.md) and before the seal-only step of [`publish-draft-release`](../publish-draft-release/README.md); [`cargo-publish`](../cargo-publish/README.md) runs behind it.
+Run it in the tag run's gate job, after [`check-release-readiness`](../check-release-readiness/README.md) and before the seal-only step of [`publish-draft-release`](../publish-draft-release/README.md); [`cargo-publish`](../rust/cargo-publish/README.md) runs behind it.
 
 ## Usage
 
 ```yaml
 - name: Require a verified signed tag (final path only)
   if: github.ref_type == 'tag'
-  uses: gronke/rust-ci/.github/actions/require-signed-tag@v1
+  uses: gronke/ci/.github/actions/require-signed-tag@v3
 ```
 
 ## Inputs

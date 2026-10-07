@@ -25,6 +25,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 
 ### Changed
 
+- **Breaking:** the repository is `gronke/ci`: the Rust actions live under `.github/actions/rust/<name>`, the release flow and the other language-neutral actions stay at `.github/actions/<name>`, and the reusable sealed pipeline is `.github/workflows/rust.yml`; consumers write `gronke/ci/.github/actions/rust/<name>@v3`, `gronke/ci/.github/actions/<name>@v3` and `gronke/ci/.github/workflows/rust.yml@v3`.
 - `ci.yml`: the msrv leg checks the committed `Cargo.lock` like the main gate, and resolves afresh only for a crate without one.
 - `sccache`: `auto` activates on a backend configured by the rules of the pinned release, a configuration file's cache and a multi-level chain included; a tuning variable alone (`SCCACHE_CACHE_SIZE`, a `SCCACHE_CONF` without a cache) no longer does.
 - `cargo-install`: host mode puts `<cargo-cache>/bin` on `PATH` for later steps, and `cargo-cache` may be absolute there too.

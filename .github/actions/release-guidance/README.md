@@ -6,7 +6,7 @@ Run it as the last step of a successful candidate build, after [`draft-release`]
 ## Usage
 
 ```yaml
-- uses: gronke/rust-ci/.github/actions/release-guidance@v1
+- uses: gronke/ci/.github/actions/release-guidance@v3
   with:
     version: ${{ env.VERSION }}
     marker-tag: ${{ steps.draft.outputs.marker }}

@@ -18,13 +18,13 @@ jobs:
       - uses: actions/checkout@v7.0.1
 
       - name: install-toolchain
-        uses: ./.github/actions/install-toolchain
+        uses: ./.github/actions/rust/install-toolchain
         with:
           components: rustfmt clippy
 
       # rust-cache: warms the cargo cache + sets CARGO_INCREMENTAL=0 for the build steps below.
       - name: rust-cache (fixture)
-        uses: ./.github/actions/rust-cache
+        uses: ./.github/actions/rust/rust-cache
         with:
           prefix: fixture
           cache-target: "true"
@@ -36,7 +36,7 @@ jobs:
         run: test "$CARGO_INCREMENTAL" = "0"
 
       - name: lint-and-test (fixture)
-        uses: ./.github/actions/lint-and-test
+        uses: ./.github/actions/rust/lint-and-test
         with:
           working-directory: fixtures/sample-crate
 
@@ -54,7 +54,7 @@ jobs:
           printf '%s\n' "$*" >> "$CARGO_ARGV"
           SHIM
           chmod +x "$shim/cargo"
-          script="$GITHUB_WORKSPACE/.github/actions/lint-and-test/lint-and-test.sh"
+          script="$GITHUB_WORKSPACE/.github/actions/rust/lint-and-test/lint-and-test.sh"
           export CARGO_ARGV="$RUNNER_TEMP/cargo-argv"
 
           : > "$CARGO_ARGV"
@@ -92,8 +92,8 @@ jobs:
           CLIPPY_ARGS: --all-targets
           OFFLINE: "false"
         run: |
-          LOCKED=true bash "$GITHUB_WORKSPACE/.github/actions/lint-and-test/lint-and-test.sh"
-          LOCKED=false bash "$GITHUB_WORKSPACE/.github/actions/lint-and-test/lint-and-test.sh"
+          LOCKED=true bash "$GITHUB_WORKSPACE/.github/actions/rust/lint-and-test/lint-and-test.sh"
+          LOCKED=false bash "$GITHUB_WORKSPACE/.github/actions/rust/lint-and-test/lint-and-test.sh"
 
       # cargo-out-dir: resolve the fixture build script's OUT_DIR.
       # Dependencies' build scripts emit the same cargo message, so the
@@ -103,7 +103,7 @@ jobs:
       # execution.)
       - name: cargo-out-dir (fixture)
         id: fixture_out_dir
-        uses: ./.github/actions/cargo-out-dir
+        uses: ./.github/actions/rust/cargo-out-dir
         with:
           working-directory: fixtures/sample-crate
           package: rust-ci-selftest-fixture
@@ -122,7 +122,7 @@ jobs:
       - name: cargo-out-dir rejects an unknown package (negative control)
         id: bogus_out_dir
         continue-on-error: true
-        uses: ./.github/actions/cargo-out-dir
+        uses: ./.github/actions/rust/cargo-out-dir
         with:
           working-directory: fixtures/sample-crate
           package: no-such-package
@@ -143,7 +143,7 @@ jobs:
       # cargo-install + cargo-use in HOST mode (docker:false): wrap a plain
       # `cargo install` on the runner, then run the tool from the shared bin dir.
       - name: cargo-install (host) a CLI crate into a shared cache
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: npm-utils
@@ -152,7 +152,7 @@ jobs:
           cargo-cache: .cargo-tools-host
 
       - name: cargo-use (host) runs the installed tool
-        uses: ./.github/actions/cargo-use
+        uses: ./.github/actions/rust/cargo-use
         with:
           docker: "false"
           cargo-cache: .cargo-tools-host
@@ -163,7 +163,7 @@ jobs:
       - name: cargo-install rejects a malicious tool name (negative control)
         id: evil_tool
         continue-on-error: true
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: "evil; touch /tmp/cicd-pwned"
@@ -182,7 +182,7 @@ jobs:
       # an absolute cache dir that joins PATH, and a second call finds the exact
       # version and skips.
       - name: cargo-install (host) a prebuilt release
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: cargo-nextest
@@ -194,7 +194,7 @@ jobs:
 
       - name: cargo-install (host) finds the exact version and skips
         id: prebuilt-again
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: cargo-nextest
@@ -214,7 +214,7 @@ jobs:
       - name: a prebuilt release with a wrong pin is refused
         id: bad-pin
         continue-on-error: true
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: cargo-deny
@@ -235,7 +235,7 @@ jobs:
       # position consumers use; a fresh key exercises prune + upload, an
       # exact-hit re-run skips both (the stored entry is already pruned).
       - name: rust-cache-save (fixture; prune + upload)
-        uses: ./.github/actions/rust-cache-save
+        uses: ./.github/actions/rust/rust-cache-save
         with:
           working-directory: fixtures/sample-crate
 
@@ -252,7 +252,7 @@ jobs:
 
       # save: false is the pull-request mode: the step must no-op.
       - name: rust-cache-save honours save=false (no-op control)
-        uses: ./.github/actions/rust-cache-save
+        uses: ./.github/actions/rust/rust-cache-save
         with:
           save: "false"
           working-directory: fixtures/sample-crate
@@ -274,7 +274,7 @@ jobs:
           echo "$RUNNER_TEMP/image-tools" >> "$GITHUB_PATH"
       - name: cargo-install, empty cache and the version on PATH
         id: path-hit
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: cargo-nextest
@@ -285,7 +285,7 @@ jobs:
           cargo-cache: ${{ runner.temp }}/empty-cache
       - name: cargo-install, a stale version in the cache
         id: shadowed
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           docker: "false"
           tool: cargo-nextest
@@ -316,7 +316,7 @@ jobs:
 
       # cargo metadata resolves the crate version; the runner's default toolchain suffices.
       - name: install-toolchain
-        uses: ./.github/actions/install-toolchain
+        uses: ./.github/actions/rust/install-toolchain
 
       - name: check passes with a bumped version
         uses: ./.github/actions/changelog
@@ -576,7 +576,7 @@ jobs:
 
       # cargo metadata resolves the crate version; the runner's default toolchain suffices.
       - name: install-toolchain
-        uses: ./.github/actions/install-toolchain
+        uses: ./.github/actions/rust/install-toolchain
 
       - name: stage a crate with a scratch origin
         run: |
@@ -839,7 +839,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
 
       - name: build-image (local, cached, with a cross target)
-        uses: ./.github/actions/build-image
+        uses: ./.github/actions/rust/build-image
         with:
           tag: rust-ci:selftest
           cache: "true"
@@ -866,7 +866,7 @@ jobs:
           echo "✓ --network=none blocks network egress"
 
       - name: cargo-fetch (networked)
-        uses: ./.github/actions/cargo-fetch
+        uses: ./.github/actions/rust/cargo-fetch
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -874,7 +874,7 @@ jobs:
       # cargo-docker: a sealed build off the warmed cache (exercises the low-level
       # wrapper; no out-dir-package also proves the resolve step skips cleanly).
       - name: cargo-docker (sealed build)
-        uses: ./.github/actions/cargo-docker
+        uses: ./.github/actions/rust/cargo-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -883,7 +883,7 @@ jobs:
       # Arguments after `--` belong to the test binary; --offline must not land
       # among them.
       - name: cargo-docker (sealed test with binary arguments)
-        uses: ./.github/actions/cargo-docker
+        uses: ./.github/actions/rust/cargo-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -893,7 +893,7 @@ jobs:
       # replay + the /work/target → target-dir translation).
       - name: cargo-docker (sealed build + out-dir)
         id: docker_out_dir
-        uses: ./.github/actions/cargo-docker
+        uses: ./.github/actions/rust/cargo-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -914,7 +914,7 @@ jobs:
       - name: cargo-docker rejects an unknown out-dir-package (negative control)
         id: docker_bogus_out_dir
         continue-on-error: true
-        uses: ./.github/actions/cargo-docker
+        uses: ./.github/actions/rust/cargo-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -929,7 +929,7 @@ jobs:
           echo "✓ unknown out-dir-package rejected"
 
       - name: lint-and-test (sealed, --network none) + env passthrough
-        uses: ./.github/actions/lint-and-test-docker
+        uses: ./.github/actions/rust/lint-and-test-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -942,7 +942,7 @@ jobs:
       # Negative control: the DEFAULT include (CARGO_.*) must NOT forward an
       # unrelated host var. CICD_PROBE is in the runner env but should not cross.
       - name: lint-and-test (default include does not leak)
-        uses: ./.github/actions/lint-and-test-docker
+        uses: ./.github/actions/rust/lint-and-test-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -951,7 +951,7 @@ jobs:
 
       # Prove the no-warmup path: networked, a cold cache, no cargo-fetch before it.
       - name: lint-and-test (networked, no warmup) + exclusion wins
-        uses: ./.github/actions/lint-and-test-docker
+        uses: ./.github/actions/rust/lint-and-test-docker
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -968,7 +968,7 @@ jobs:
             CICD_EXPECT=absent
 
       - name: publish-dry-run (networked prep, sealed verify-build)
-        uses: ./.github/actions/publish-dry-run
+        uses: ./.github/actions/rust/publish-dry-run
         with:
           image: rust-ci:selftest
           working-directory: fixtures/sample-crate
@@ -981,7 +981,7 @@ jobs:
       # is pure-Rust (no openssl) and gates its binaries behind the `cli` feature, so
       # this also exercises the free-form `args` pass-through.
       - name: cargo-install (sealed) a CLI crate into the shared cache
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           image: rust-ci:selftest
           tool: npm-utils
@@ -993,7 +993,7 @@ jobs:
         run: test -x .cargo-tools/bin/npm-utils && test -x .cargo-tools/bin/cargo-npm-utils
 
       - name: cargo-use (sealed, offline) runs the installed cargo subcommand
-        uses: ./.github/actions/cargo-use
+        uses: ./.github/actions/rust/cargo-use
         with:
           image: rust-ci:selftest
           cargo-cache: .cargo-tools
@@ -1012,7 +1012,7 @@ jobs:
 
       - name: cargo-install (sealed) a prebuilt release into the shared cache
         id: prebuilt-sealed
-        uses: ./.github/actions/cargo-install
+        uses: ./.github/actions/rust/cargo-install
         with:
           image: rust-ci:selftest
           tool: cargo-nextest
@@ -1031,7 +1031,7 @@ jobs:
           echo "✓ nothing from the cache ran on the runner; the verified release took its place"
 
       - name: cargo-use (sealed, offline) runs the prebuilt cargo subcommand
-        uses: ./.github/actions/cargo-use
+        uses: ./.github/actions/rust/cargo-use
         with:
           image: rust-ci:selftest
           cargo-cache: .cargo-tools-prebuilt
@@ -1043,7 +1043,7 @@ jobs:
       - name: cargo-use offline blocks egress (negative control)
         id: use_offline_egress
         continue-on-error: true
-        uses: ./.github/actions/cargo-use
+        uses: ./.github/actions/rust/cargo-use
         with:
           image: rust-ci:selftest
           cargo-cache: .cargo-tools
@@ -1061,7 +1061,7 @@ jobs:
       # from Cargo.toml (no hand-managed version), so a consumer can run the whole Docker
       # pipeline on the support floor. The fixture pins 1.82.
       - name: build-image resolves the msrv sentinel from Cargo.toml
-        uses: ./.github/actions/build-image
+        uses: ./.github/actions/rust/build-image
         with:
           rust-version: msrv
           working-directory: fixtures/sample-crate
@@ -1086,7 +1086,7 @@ jobs:
       - name: build-image rejects a non-numeric declared rust-version (negative control)
         id: bi_bad
         continue-on-error: true
-        uses: ./.github/actions/build-image
+        uses: ./.github/actions/rust/build-image
         with:
           rust-version: msrv
           working-directory: ${{ runner.temp }}/bad-msrv
@@ -1111,7 +1111,7 @@ jobs:
       # Exercises the Cargo.toml extraction, the image pull, and the sealed check.
       # locked: true (the default) takes the committed-lockfile path: the fixture pins one.
       - name: msrv (locked true, rust image at the declared MSRV, sealed check)
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: fixtures/sample-crate
           package: rust-ci-selftest-fixture
@@ -1123,7 +1123,7 @@ jobs:
       - name: msrv rejects a non-numeric rust-version (negative control)
         id: msrv_bad
         continue-on-error: true
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: fixtures/sample-crate
           rust-version: "latest; touch pwned"
@@ -1151,7 +1151,7 @@ jobs:
       - name: msrv (locked true) rejects a crate with no committed lockfile
         id: msrv_nolock_locked
         continue-on-error: true
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: ${{ runner.temp }}/fixture-nolock
           package: rust-ci-selftest-fixture
@@ -1166,7 +1166,7 @@ jobs:
 
       # locked: false (opt-in): resolve a fresh lockfile at the MSRV up front, then check it sealed.
       - name: msrv (locked false) resolves a lockfile when none is committed
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: ${{ runner.temp }}/fixture-nolock
           package: rust-ci-selftest-fixture
@@ -1184,7 +1184,7 @@ jobs:
       - name: snapshot the committed lockfile
         run: cp fixtures/sample-crate/Cargo.lock "$RUNNER_TEMP/Cargo.lock.before"
       - name: msrv (locked false) resolves fresh without touching the committed lockfile
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: fixtures/sample-crate
           package: rust-ci-selftest-fixture
@@ -1212,7 +1212,7 @@ jobs:
           git -C "$RUNNER_TEMP/fixture-gitdir" -c user.name=selftest -c user.email=selftest@invalid commit -q -m fixture
           test -d "$RUNNER_TEMP/fixture-gitdir/.git"
       - name: msrv (locked false) preserves git metadata in the copy (.git directory)
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: ${{ runner.temp }}/fixture-gitdir
           package: rust-ci-selftest-fixture
@@ -1229,7 +1229,7 @@ jobs:
           test -f "$RUNNER_TEMP/fixture-gitfile/.git"
           test ! -e "$RUNNER_TEMP/fixture-gitfile/Cargo.lock"
       - name: msrv (locked false) preserves git metadata in the copy (.git file / worktree)
-        uses: ./.github/actions/msrv
+        uses: ./.github/actions/rust/msrv
         with:
           working-directory: ${{ runner.temp }}/fixture-gitfile
           package: rust-ci-selftest-fixture
@@ -1250,7 +1250,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
+      - uses: ./.github/actions/rust/install-toolchain
         with:
           components: clippy
       - name: toolchain is installed + on PATH
@@ -1270,7 +1270,7 @@ jobs:
       CARGO_INCREMENTAL: "1"
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         with:
           prefix: passthrough
       - name: explicit CARGO_INCREMENTAL is preserved
@@ -1290,7 +1290,7 @@ jobs:
         run: |
           mkdir -p "$CARGO_HOME/registry/index" "$CARGO_HOME/registry/cache" "$CARGO_HOME/git/db"
           echo "${{ github.run_id }}" > "$CARGO_HOME/registry/cache/selftest-sentinel"
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         with:
           prefix: cargohome-${{ github.run_id }}
 
@@ -1302,7 +1302,7 @@ jobs:
       CARGO_HOME: /tmp/cargo-home
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         with:
           prefix: cargohome-${{ github.run_id }}
           save: "false"
@@ -1316,7 +1316,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         with:
           prefix: nosave-${{ github.run_id }}
           save: "false"
@@ -1351,7 +1351,7 @@ jobs:
       RUST_CI_LOCAL_TARGET: "1"
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         with:
           prefix: localtgt-${{ github.run_id }}
           cache-target: "true"
@@ -1373,7 +1373,7 @@ jobs:
           test "$(cat "$CARGO_TARGET_DIR/sentinel")" = "${{ github.run_id }}" || {
             echo "::error::checkout's clean would delete the target dir"; exit 1; }
           echo "✓ sentinel survived git clean -ffdx"
-      - uses: ./.github/actions/rust-cache-save
+      - uses: ./.github/actions/rust/rust-cache-save
         with:
           working-directory: fixtures/sample-crate
       - name: rust-cache-save left it alone
@@ -1396,7 +1396,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - run: apt-get update -qq && apt-get install -y -qq jq >/dev/null
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
       - name: auto fired inside the container, wrapper under the mounted work tree
         run: |
@@ -1427,7 +1427,7 @@ jobs:
       CARGO_HOME: /tmp/selftest-off
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         id: cache
         with:
           prefix: localoff-${{ github.run_id }}
@@ -1445,7 +1445,7 @@ jobs:
       - name: local-target true without cache-target refuses
         id: refuse
         continue-on-error: true
-        uses: ./.github/actions/rust-cache
+        uses: ./.github/actions/rust/rust-cache
         with:
           prefix: localrefuse-${{ github.run_id }}
           local-target: "true"
@@ -1455,17 +1455,17 @@ jobs:
         run: |
           [ "${{ steps.refuse.outcome }}" = "failure" ] || { echo "::error::local-target without cache-target was accepted"; exit 1; }
           echo "✓ refused"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
       - name: sccache wired nothing
         run: |
           [ "${{ steps.sccache.outputs.active }}" = "false" ] || { echo "::error::sccache activated without a backend"; exit 1; }
           [ -z "${RUSTC_WRAPPER:-}" ] || { echo "::error::RUSTC_WRAPPER was set: $RUSTC_WRAPPER"; exit 1; }
           echo "✓ sccache auto stayed off"
-      - uses: ./.github/actions/sccache-stats
+      - uses: ./.github/actions/rust/sccache-stats
       - name: stats no-op without sccache
         run: echo "✓ sccache-stats survived an inactive job"
-      - uses: ./.github/actions/crates-mirror
+      - uses: ./.github/actions/rust/crates-mirror
         id: mirror
       - name: crates-mirror wrote nothing
         run: |
@@ -1484,7 +1484,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: offer a backend the way a job-started hook would
         run: echo "SCCACHE_DIR=$RUNNER_TEMP/sccache-store" >> "$GITHUB_ENV"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           namespace: tier/linux-x64
@@ -1506,7 +1506,7 @@ jobs:
           hits=$("$RUSTC_WRAPPER" --show-stats --stats-format=json | jq '[.stats.cache_hits.counts[]?] | add // 0')
           [ "$hits" -gt 0 ] || { echo "::error::no cache hits after a repeat build"; "$RUSTC_WRAPPER" --show-stats; exit 1; }
           echo "✓ $hits hit(s) through the backend"
-      - uses: ./.github/actions/sccache-stats
+      - uses: ./.github/actions/rust/sccache-stats
       - name: the stats landed as cache.sccache facts and in the step summary
         run: |
           notes="$RUNNER_TEMP/rust-ci-timing/notes.tsv"
@@ -1514,8 +1514,8 @@ jobs:
           # The runner owns $GITHUB_STEP_SUMMARY and a later step cannot read it
           # back, so the writer runs once more by hand against a readable file.
           S="$RUNNER_TEMP/sccache-summary.md"
-          GITHUB_ACTION_PATH=.github/actions/sccache-stats RUNNER_TEMP="$RUNNER_TEMP/sccache-unit" GITHUB_STEP_SUMMARY="$S" \
-            bash .github/actions/sccache-stats/sccache-stats.sh >/dev/null
+          GITHUB_ACTION_PATH=.github/actions/rust/sccache-stats RUNNER_TEMP="$RUNNER_TEMP/sccache-unit" GITHUB_STEP_SUMMARY="$S" \
+            bash .github/actions/rust/sccache-stats/sccache-stats.sh >/dev/null
           cat "$S"
           # shellcheck disable=SC2016  # the backticks are Markdown, not a subshell
           grep -q '| `cache.sccache` | .* hits / .* misses of ' "$S" \
@@ -1664,7 +1664,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: offer an empty backend the way a job-started hook would
         run: echo "SCCACHE_DIR=$RUNNER_TEMP/sccache-store" >> "$GITHUB_ENV"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         with:
           write: "false"
       - name: the build reads and stores nothing
@@ -1695,8 +1695,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/install-toolchain
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           archive: selftest-${{ github.run_id }}-${{ github.run_attempt }}
@@ -1719,8 +1719,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/install-toolchain
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           archive: selftest-${{ github.run_id }}-${{ github.run_attempt }}
@@ -1756,13 +1756,13 @@ jobs:
             extra-env: CARGO_TERM_COLOR=always
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
+      - uses: ./.github/actions/rust/install-toolchain
       - name: a CARGO_* variable the writer did not have
         if: matrix.extra-env != ''
         env:
           EXTRA_ENV: ${{ matrix.extra-env }}
         run: echo "$EXTRA_ENV" >> "$GITHUB_ENV"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           archive: selftest-${{ github.run_id }}-${{ github.run_attempt }}
@@ -1791,10 +1791,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
+      - uses: ./.github/actions/rust/install-toolchain
       - name: change the fixture's source
         run: echo 'pub fn changed() -> u8 { 1 }' >> fixtures/sample-crate/src/lib.rs
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         with:
           archive: selftest-${{ github.run_id }}-${{ github.run_attempt }}
           namespace: selftest/a
@@ -1815,10 +1815,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/install-toolchain
+      - uses: ./.github/actions/rust/install-toolchain
       - name: the same change
         run: echo 'pub fn changed() -> u8 { 1 }' >> fixtures/sample-crate/src/lib.rs
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         with:
           archive: selftest-${{ github.run_id }}-${{ github.run_attempt }}
           namespace: selftest/a
@@ -1844,7 +1844,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: offer a backend the way a job-started hook would
         run: echo "SCCACHE_DIR=$RUNNER_TEMP/sccache-store" >> "$GITHUB_ENV"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           archive: never-${{ github.run_id }}
@@ -1853,7 +1853,7 @@ jobs:
           [ "${{ steps.sccache.outputs.archive }}" = false ] || { echo "::error::the archive engaged beside a backend"; exit 1; }
           [ "${{ steps.sccache.outputs.active }}" = true ] || { echo "::error::sccache did not activate on the backend"; exit 1; }
           [ "$SCCACHE_DIR" = "$RUNNER_TEMP/sccache-store" ] || { echo "::error::SCCACHE_DIR is $SCCACHE_DIR"; exit 1; }
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: gha-leftover
         continue-on-error: true
         env:
@@ -1870,7 +1870,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: gha-leftover
         continue-on-error: true
         env:
@@ -1879,7 +1879,7 @@ jobs:
         run: |
           [ "${{ steps.gha-leftover.outcome }}" = failure ] || { echo "::error::SCCACHE_GHA_ENABLED passed auto silently"; exit 1; }
           echo "✓ the leftover gha variable failed the step"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: off-with-leftover
         with:
           mode: "off"
@@ -1903,21 +1903,21 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: a configuration file that configures a cache
         run: printf '[cache.disk]\ndir = "%s"\n' "$RUNNER_TEMP/file-store" > "$RUNNER_TEMP/sccache-file.toml"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: file-read-only
         continue-on-error: true
         env:
           SCCACHE_CONF: ${{ runner.temp }}/sccache-file.toml
         with:
           write: "false"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: file-namespace
         continue-on-error: true
         env:
           SCCACHE_CONF: ${{ runner.temp }}/sccache-file.toml
         with:
           namespace: selftest
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: chain-read-only
         continue-on-error: true
         env:
@@ -1940,7 +1940,7 @@ jobs:
             echo "SCCACHE_AZURE_STORAGE_ACCOUNT=selftest"
             echo "SCCACHE_AZURE_ENDPOINT=https://selftest.blob.core.windows.net"
           } >> "$GITHUB_ENV"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: entra
         with:
           write: "false"
@@ -1962,7 +1962,7 @@ jobs:
           chmod +x "$RUNNER_TEMP/stand-in"
           # The running server keeps the binary busy, so the stand-in takes its name.
           mv -f "$RUNNER_TEMP/stand-in" "$RUSTC_WRAPPER"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: elsewhere
         continue-on-error: true
         with:
@@ -1986,14 +1986,14 @@ jobs:
           printf '#!/bin/sh\necho "error: rustup could not choose a version of rustc to run" >&2\nexit 1\n' > "$RUNNER_TEMP/broken-rustc/rustc"
           chmod +x "$RUNNER_TEMP/broken-rustc/rustc"
           echo "$RUNNER_TEMP/broken-rustc" >> "$GITHUB_PATH"
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: mode-off
         with:
           mode: "off"
           archive: never-${{ github.run_id }}
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: idle
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: archived
         with:
           archive: selftest-norustc-${{ github.run_id }}-${{ github.run_attempt }}
@@ -2030,7 +2030,7 @@ jobs:
       SCCACHE_REDIS_ENDPOINT: redis://127.0.0.1:6379
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: ./.github/actions/sccache
+      - uses: ./.github/actions/rust/sccache
         id: sccache
         with:
           namespace: selftest/redis
@@ -2083,11 +2083,11 @@ jobs:
           curl -sSfL https://index.crates.io/li/bc/libc -o /tmp/sparse-mirror/li/bc/libc
           (cd /tmp/sparse-mirror && python3 -m http.server 8399 &>/tmp/sparse-mirror.log &)
           for _ in $(seq 1 20); do curl -sf http://127.0.0.1:8399/config.json >/dev/null && break; sleep 0.5; done
-      - uses: ./.github/actions/crates-mirror
+      - uses: ./.github/actions/rust/crates-mirror
         id: mirror
       - name: rust-cache with cache-registry auto skips the registry entry
         id: cache
-        uses: ./.github/actions/rust-cache
+        uses: ./.github/actions/rust/rust-cache
         with:
           prefix: mirrored-${{ github.run_id }}
           cache-registry: "auto"
@@ -2109,7 +2109,7 @@ jobs:
           cargo fetch --locked
           echo "✓ fetch through the replacement"
       - name: a second run through the url input is idempotent
-        uses: ./.github/actions/crates-mirror
+        uses: ./.github/actions/rust/crates-mirror
         with:
           url: sparse+http://127.0.0.1:8399/
       - name: no duplicate block was appended
@@ -2184,7 +2184,7 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - name: Dry run (default)
         id: dry
-        uses: ./.github/actions/cargo-publish
+        uses: ./.github/actions/rust/cargo-publish
         with:
           working-directory: fixtures/sample-crate
       - name: Assert nothing was published
@@ -2199,7 +2199,7 @@ jobs:
       # keeps prereleases and bare majors off the registry.
       - name: Publish a version the pattern excludes
         id: excluded
-        uses: ./.github/actions/cargo-publish
+        uses: ./.github/actions/rust/cargo-publish
         with:
           working-directory: fixtures/sample-crate
           publish: "true"
@@ -2214,7 +2214,7 @@ jobs:
       - name: Upload without a credential
         id: refuse
         continue-on-error: true
-        uses: ./.github/actions/cargo-publish
+        uses: ./.github/actions/rust/cargo-publish
         with:
           working-directory: fixtures/sample-crate
           publish: "true"
@@ -2236,7 +2236,7 @@ jobs:
           : > "$RUNNER_TEMP/published-crate/src/lib.rs"
       - name: Already-published skips without a credential
         id: duplicate
-        uses: ./.github/actions/cargo-publish
+        uses: ./.github/actions/rust/cargo-publish
         with:
           working-directory: ${{ runner.temp }}/published-crate
           publish: "true"
@@ -2650,7 +2650,7 @@ jobs:
         with:
           sample-interval: "0"
 
-      - uses: ./.github/actions/rust-cache
+      - uses: ./.github/actions/rust/rust-cache
         id: cache
         with:
           prefix: stats-fixture
@@ -2690,9 +2690,9 @@ jobs:
         run: |
           set -euo pipefail
           S="$RUNNER_TEMP/cache-summary.md"
-          GITHUB_ACTION_PATH=.github/actions/rust-cache RUNNER_TEMP="$RUNNER_TEMP/cache-unit" \
+          GITHUB_ACTION_PATH=.github/actions/rust/rust-cache RUNNER_TEMP="$RUNNER_TEMP/cache-unit" \
             GITHUB_STEP_SUMMARY="$S" GITHUB_ENV=/dev/null \
-            bash .github/actions/rust-cache/cache-stats.sh
+            bash .github/actions/rust/rust-cache/cache-stats.sh
           cat "$S"
           grep -q '^### Cache restore' "$S" \
             || { echo "::error::no heading in the step summary"; exit 1; }

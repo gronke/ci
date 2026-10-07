@@ -14,8 +14,8 @@ steps:
   - uses: actions/checkout@v7
     with:
       fetch-depth: 0     # the merge-back needs history
-  - uses: gronke/rust-ci/.github/actions/install-toolchain@v1   # crate repositories: cargo metadata
-  - uses: gronke/rust-ci/.github/actions/cut-release@v1
+  - uses: gronke/ci/.github/actions/rust/install-toolchain@v3   # crate repositories: cargo metadata
+  - uses: gronke/ci/.github/actions/cut-release@v3
 ```
 
 ## Inputs

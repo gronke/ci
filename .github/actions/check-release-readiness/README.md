@@ -1,13 +1,13 @@
 # check-release-readiness
 
 Verify that a release is coherent before anything is built: the tag matches the declared version, and a publishable crate packages with `cargo publish --dry-run` and is not yet on crates.io.
-Run it in the gate job of the release pipeline, ahead of [`publish-draft-release`](../publish-draft-release/README.md) and [`cargo-publish`](../cargo-publish/README.md).
+Run it in the gate job of the release pipeline, ahead of [`publish-draft-release`](../publish-draft-release/README.md) and [`cargo-publish`](../rust/cargo-publish/README.md).
 
 ## Usage
 
 ```yaml
-- uses: gronke/rust-ci/.github/actions/install-toolchain@v1
-- uses: gronke/rust-ci/.github/actions/check-release-readiness@v1
+- uses: gronke/ci/.github/actions/rust/install-toolchain@v3
+- uses: gronke/ci/.github/actions/check-release-readiness@v3
   with:
     expected-version: ${{ steps.expect.outputs.version }}
 ```

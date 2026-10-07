@@ -9,7 +9,7 @@ Run `check` on every pull request; `cut` and `notes` are what [`cut-release`](..
 - uses: actions/checkout@v7
   with:
     fetch-depth: 0   # the baseline scan reads the release tags
-- uses: gronke/rust-ci/.github/actions/changelog@v1
+- uses: gronke/ci/.github/actions/changelog@v3
   with:
     mode: check
 ```

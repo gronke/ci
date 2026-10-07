@@ -1,0 +1,95 @@
+name: Cargo use (shared cache, sealed)
+description: Run a tool that cargo-install placed in the shared cache, sealed and network-isolated by default.
+
+inputs:
+  args:
+    description: >-
+      The command line to run, e.g. "cargo audit --no-fetch" or "cargo-audit fetch".
+      Word-split inside the container; it never reaches the host shell in docker mode.
+    required: true
+  docker:
+    description: Run inside the sealed container (default). "false" runs on the host.
+    required: false
+    default: "true"
+  image:
+    description: CI image. Use the SAME image cargo-install used (binary ABI must match).
+    required: false
+    default: rust-ci:latest
+  cargo-cache:
+    description: >-
+      Host dir mounted RW as CARGO_HOME (/cache/cargo); must match the cargo-cache cargo-install wrote to.
+      Its bin/ is prepended to PATH.
+    required: false
+    default: .cargo-cache
+  offline:
+    description: >-
+      Run sealed with --network=none (default "true").
+      Set "false" for a tool that must reach the network (e.g. cargo-audit fetching the advisory DB).
+    required: false
+    default: "true"
+  target-dir:
+    description: >-
+      Optional host dir mounted RW at /work/target (plus CARGO_TARGET_DIR) for a tool that builds.
+      Empty (default) mounts no target; the repo stays read-only.
+    required: false
+    default: ""
+  working-directory:
+    description: Directory the action runs from (its repo is mounted read-only).
+    required: false
+    default: "."
+  env-include:
+    description: Regex (POSIX ERE) of runner variable names to forward, anchored full-name; see docs/sealed-builds.md.
+    required: false
+    default: "CARGO_.*"
+  env-exclude:
+    description: Regex (POSIX ERE) of names to drop from the included set (exclusion wins); see docs/sealed-builds.md.
+    required: false
+    default: ""
+  env:
+    description: Literal KEY=VALUE lines forwarded verbatim; a bare NAME line forwards that variable from the runner environment; see docs/sealed-builds.md.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: run (sealed)
+      if: ${{ inputs.docker == 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        IMAGE: ${{ inputs.image }}
+        CARGO_CACHE: ${{ inputs.cargo-cache }}
+        OFFLINE: ${{ inputs.offline }}
+        TARGET_DIR: ${{ inputs.target-dir }}
+        ARGS: ${{ inputs.args }}
+        # The shared bin dir as the container sees it (seal.sh mounts cargo-cache there).
+        USE_BIN_DIR: /cache/cargo/bin
+        ENV_INCLUDE: ${{ inputs.env-include }}
+        ENV_EXCLUDE: ${{ inputs.env-exclude }}
+        INPUT_ENV: ${{ inputs.env }}
+      run: |
+        set -euo pipefail
+        # shellcheck source=/dev/null
+        source "$GITHUB_ACTION_PATH/../../_lib/seal.sh"
+        # seal_run reads OFFLINE from this env for the --network=none decision. ARGS
+        # and the in-container bin dir aren't CARGO_* (env-include won't forward
+        # them); hand them to the in-container script.
+        export SEAL_PASS="ARGS USE_BIN_DIR"
+        seal_run bash /cicd/cargo-use.sh
+
+    - name: run (host)
+      if: ${{ inputs.docker != 'true' }}
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        CARGO_CACHE: ${{ inputs.cargo-cache }}
+        ARGS: ${{ inputs.args }}
+      run: |
+        set -euo pipefail
+        # Host mode: run the tool from the shared bin dir on the runner. NOTE: ARGS
+        # word-splits on the host shell here, so use docker mode (the default) for
+        # untrusted input. Reuses the same script as the sealed path.
+        export CARGO_HOME="$PWD/${CARGO_CACHE}"
+        export USE_BIN_DIR="$PWD/${CARGO_CACHE}/bin"
+        bash "$GITHUB_ACTION_PATH/cargo-use.sh"
