@@ -1686,11 +1686,16 @@ jobs:
   # GitHub's cache service at job end, and a reader of its namespace restores
   # it read-only and hits, while a reader of another namespace finds a family
   # of its own. The name carries the run, so every run saves a fresh archive.
+  # The toolchain keys the archive family, so every job of the family installs the same
+  # stable instead of using the runner image's rustc, which differs between image versions
+  # during a rollout. The archive name carries the run attempt: re-run all jobs, a failed-only
+  # re-run finds no writer entry for the new attempt.
   selftest-sccache-archive-save:
     name: sccache archive, the writer saves at job end
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/install-toolchain
       - uses: ./.github/actions/sccache
         id: sccache
         with:
@@ -1714,6 +1719,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/install-toolchain
       - uses: ./.github/actions/sccache
         id: sccache
         with:
@@ -1750,6 +1756,7 @@ jobs:
             extra-env: CARGO_TERM_COLOR=always
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/install-toolchain
       - name: a CARGO_* variable the writer did not have
         if: matrix.extra-env != ''
         env:
@@ -1784,6 +1791,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/install-toolchain
       - name: change the fixture's source
         run: echo 'pub fn changed() -> u8 { 1 }' >> fixtures/sample-crate/src/lib.rs
       - uses: ./.github/actions/sccache
@@ -1807,6 +1815,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: ./.github/actions/install-toolchain
       - name: the same change
         run: echo 'pub fn changed() -> u8 { 1 }' >> fixtures/sample-crate/src/lib.rs
       - uses: ./.github/actions/sccache

@@ -19,6 +19,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 - `sccache`: `archive` (with `archive-size` and `lockfiles`) carries the local disk cache as one GitHub Actions cache entry per job where no backend is configured, keyed by archive, namespace, toolchain, `CARGO_*` environment and lockfile, restored before the server starts and saved once per key at job end when `write` is `"true"`.
 - `cargo-install`: `url`, `sha256-x86_64` and `sha256-aarch64` install a pinned prebuilt release instead of compiling, and `bin` names its binary; in host mode an exact version that later steps would run is skipped, which the `installed` output reports, while docker mode runs nothing from the cache on the runner and installs every time.
 
+### Fixed
+
+- selftest: the `sccache archive` jobs install the toolchain instead of using the runner image's rustc, whose version keys the archive family and differed between jobs of one run during an image rollout.
+
 ### Changed
 
 - `ci.yml`: the msrv leg checks the committed `Cargo.lock` like the main gate, and resolves afresh only for a crate without one.
