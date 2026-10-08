@@ -3,7 +3,7 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com); releases are cut from the `[Unreleased]` section by this repository's own `changelog` action, so the flow dogfoods itself.
 
-## [Unreleased]
+## [3.0.0] - 2026-10-08
 
 ### Added
 
@@ -289,7 +289,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com); releases are 
 
 - First release: reusable Rust CI/CD actions (bring-up baseline).
 
-[Unreleased]: https://github.com/gronke/rust-ci/compare/v2.0.0...HEAD
+[3.0.0]: https://github.com/gronke/rust-ci/compare/v2.0.0...v3.0.0
 [2.0.0]: https://github.com/gronke/rust-ci/compare/v1.8.0...v2.0.0
 [1.8.0]: https://github.com/gronke/rust-ci/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/gronke/rust-ci/compare/v1.6.1...v1.7.0
