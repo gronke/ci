@@ -211,6 +211,40 @@ jobs:
           [ "${{ steps.prebuilt-again.outputs.installed }}" = false ] || { echo "::error::the second call installed again"; exit 1; }
           echo "✓ $got on PATH; the second call skipped"
 
+      # A prebuilt cargo subcommand binary that refuses `--version` without its
+      # subcommand (cargo-hack answers only `cargo-hack hack --version`): the
+      # probe asks it that way, so the release installs, a second call finds it
+      # present, and the tool answers on PATH.
+      - name: cargo-install (host) a prebuilt release that answers only its subcommand's --version
+        uses: ./.github/actions/rust/cargo-install
+        with:
+          docker: "false"
+          tool: cargo-hack
+          version: "0.6.45"
+          url: https://github.com/taiki-e/cargo-hack/releases/download/v{version}/cargo-hack-{target}.tar.gz
+          sha256-x86_64: b242dffcfd43317ac484dd2dbc3b9fc5f8a7eb3ba252af31b531503f0bad33d1
+          sha256-aarch64: 9ac71756f1da6e8798ac5afbfd222abecb95de9c10e672ed52c179b637d6444b
+          cargo-cache: ${{ runner.temp }}/cargo-tools-prebuilt
+
+      - name: cargo-install (host) finds the subcommand tool present and skips
+        id: hack-again
+        uses: ./.github/actions/rust/cargo-install
+        with:
+          docker: "false"
+          tool: cargo-hack
+          version: "0.6.45"
+          url: https://github.com/taiki-e/cargo-hack/releases/download/v{version}/cargo-hack-{target}.tar.gz
+          sha256-x86_64: b242dffcfd43317ac484dd2dbc3b9fc5f8a7eb3ba252af31b531503f0bad33d1
+          sha256-aarch64: 9ac71756f1da6e8798ac5afbfd222abecb95de9c10e672ed52c179b637d6444b
+          cargo-cache: ${{ runner.temp }}/cargo-tools-prebuilt
+
+      - name: the subcommand tool answers on PATH at its pinned version
+        run: |
+          got=$(cargo hack --version | head -n 1)
+          case "$got" in "cargo-hack 0.6.45"*) ;; *) echo "::error::cargo hack reports '$got'"; exit 1 ;; esac
+          [ "${{ steps.hack-again.outputs.installed }}" = false ] || { echo "::error::the second call installed again"; exit 1; }
+          echo "✓ $got on PATH; the second call skipped"
+
       - name: a prebuilt release with a wrong pin is refused
         id: bad-pin
         continue-on-error: true

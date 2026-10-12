@@ -3,6 +3,12 @@
 All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com); releases are cut from the `[Unreleased]` section by this repository's own `changelog` action, so the flow dogfoods itself.
 
+## [Unreleased]
+
+### Fixed
+
+- `cargo-install`: the version probe accepts a cargo subcommand binary that answers `<bin> <subcommand> --version` only, cargo-hack among them, by asking that way when `<bin> --version` reports nothing, with the subcommand read off the binary's name; such a prebuilt release installs and is found present, where it was refused as not reporting its version.
+
 ## [3.0.0] - 2026-10-08
 
 ### Added
